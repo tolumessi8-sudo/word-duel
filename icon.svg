@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f1b2d"/>
+  <rect x="64" y="96" width="120" height="120" rx="22" fill="#243750" stroke="#ffb703" stroke-width="8"/>
+  <rect x="196" y="96" width="120" height="120" rx="22" fill="#243750"/>
+  <rect x="328" y="96" width="120" height="120" rx="22" fill="#243750"/>
+  <rect x="64" y="296" width="120" height="120" rx="22" fill="#243750"/>
+  <rect x="196" y="296" width="120" height="120" rx="22" fill="#243750"/>
+  <rect x="328" y="296" width="120" height="120" rx="22" fill="#243750" stroke="#2ecc71" stroke-width="8"/>
+  <text x="124" y="180" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#ffb703">W</text>
+  <text x="256" y="180" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#f1f5f9">O</text>
+  <text x="388" y="180" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#f1f5f9">R</text>
+  <text x="124" y="380" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#f1f5f9">D</text>
+  <text x="256" y="380" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#f1f5f9">U</text>
+  <text x="388" y="380" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="bold" text-anchor="middle" fill="#2ecc71">L</text>
+  <path d="M256 232 L256 280" stroke="#ffb703" stroke-width="10" stroke-linecap="round"/>
+  <path d="M236 262 L256 284 L276 262" fill="none" stroke="#ffb703" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

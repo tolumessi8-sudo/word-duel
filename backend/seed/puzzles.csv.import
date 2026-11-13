@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bhyt7tsykueek"
+
+[deps]
+
+files=["res://backend/seed/puzzles.target.translation", "res://backend/seed/puzzles.len.translation", "res://backend/seed/puzzles.dist.translation", "res://backend/seed/puzzles.division.translation"]
+
+source_file="res://backend/seed/puzzles.csv"
+dest_files=["res://backend/seed/puzzles.target.translation", "res://backend/seed/puzzles.len.translation", "res://backend/seed/puzzles.dist.translation", "res://backend/seed/puzzles.division.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
