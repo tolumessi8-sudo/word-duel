@@ -3,6 +3,8 @@ extends Control
 ## Base class for every screen. `main` is set by main.gd before start() is called.
 
 var main: Node
+## Name of the bottom-bar tab this screen belongs to ("" = no tab bar). Set it before make_root().
+var tab := ""
 
 
 func start(_args: Dictionary) -> void:
@@ -26,7 +28,7 @@ func make_root(pad := 28) -> VBoxContainer:
 	m.add_theme_constant_override("margin_left", pad)
 	m.add_theme_constant_override("margin_right", pad)
 	m.add_theme_constant_override("margin_top", pad + int(safe.x))
-	m.add_theme_constant_override("margin_bottom", pad + int(safe.y))
+	m.add_theme_constant_override("margin_bottom", (UI.NAV_H + int(safe.y) + 10) if tab != "" else pad + int(safe.y))
 	add_child(m)
 	var v := UI.vbox(16)
 	m.add_child(v)
@@ -35,23 +37,13 @@ func make_root(pad := 28) -> VBoxContainer:
 
 ## (top, bottom) safe-area insets converted to viewport units.
 func safe_insets() -> Vector2:
-	var win := DisplayServer.window_get_size()
-	if win.x <= 0 or win.y <= 0:
-		return Vector2.ZERO
-	var safe := DisplayServer.get_display_safe_area()
-	if safe.size.x <= 0 or safe.size.y <= 0:
-		return Vector2.ZERO
-	var vp := get_viewport_rect().size
-	var k := vp.x / float(win.x)
-	var top := maxf(0.0, float(safe.position.y)) * k
-	var bottom := maxf(0.0, float(win.y - (safe.position.y + safe.size.y))) * k
-	return Vector2(minf(top, 120.0), minf(bottom, 120.0))
+	return UI.safe_insets(get_viewport_rect().size)
 
 
 ## A header row with a back button and a title.
 func make_header(title: String, back_text := "Back") -> HBoxContainer:
 	var h := UI.hbox(16)
-	var b := UI.btn(back_text, UI.PANEL2, 72, 26)
+	var b := UI.btn(back_text.to_upper(), UI.PANEL2, 72, 26)
 	b.custom_minimum_size = Vector2(150, 72)
 	b.pressed.connect(on_back)
 	h.add_child(b)
@@ -62,6 +54,17 @@ func make_header(title: String, back_text := "Back") -> HBoxContainer:
 	var pad := Control.new()
 	pad.custom_minimum_size = Vector2(150, 0)
 	h.add_child(pad)
+	return h
+
+
+## Centered page title with an icon, for the tab screens.
+func make_title(title: String, icon_name: String) -> Control:
+	var h := UI.hbox(14)
+	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.add_child(UI.icon(icon_name, 56))
+	var l := UI.label(title, 48, UI.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	h.add_child(l)
 	return h
 
 

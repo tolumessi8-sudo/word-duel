@@ -6,9 +6,10 @@ var _msg: Label
 
 
 func start(_args: Dictionary) -> void:
+	tab = "settings"
 	var root := make_root(24)
 	root.add_theme_constant_override("separation", 18)
-	root.add_child(make_header("Settings"))
+	root.add_child(make_title("Settings", "gear"))
 
 	var sound := CheckButton.new()
 	sound.text = "Sound effects"
@@ -18,21 +19,43 @@ func start(_args: Dictionary) -> void:
 	sound.toggled.connect(func(on: bool) -> void:
 		Game.sound_on = on
 		Game.save_settings())
-	root.add_child(sound)
+	var sc := UI.panel(UI.PANEL, 24)
+	var sh := UI.hbox(14)
+	sc.add_child(sh)
+	sh.add_child(UI.icon("sound", 52))
+	sound.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sh.add_child(sound)
+	root.add_child(sc)
 
-	root.add_child(UI.label("Username", 30, UI.MUTED))
+	var uc := UI.panel(UI.PANEL, 24)
+	var uv := UI.vbox(14)
+	uc.add_child(uv)
+	var urow := UI.hbox(16)
+	urow.add_child(UI.avatar(str(Game.profile.get("name", "")), 84))
+	var ucol := UI.vbox(0)
+	ucol.alignment = BoxContainer.ALIGNMENT_CENTER
+	ucol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var ul := UI.label("Your username", 24, UI.MUTED)
+	ul.autowrap_mode = TextServer.AUTOWRAP_OFF
+	ucol.add_child(ul)
+	var un := UI.label(str(Game.profile.get("name", "")), 36, UI.TEXT)
+	un.autowrap_mode = TextServer.AUTOWRAP_OFF
+	ucol.add_child(un)
+	urow.add_child(ucol)
+	uv.add_child(urow)
 	_edit = LineEdit.new()
 	_edit.text = str(Game.profile.get("name", ""))
 	_edit.max_length = 16
 	_edit.custom_minimum_size = Vector2(0, 88)
-	root.add_child(_edit)
-	var save := UI.btn("Save username", UI.ACCENT, 84, 30)
+	uv.add_child(_edit)
+	var save := UI.btn("SAVE USERNAME", UI.ACCENT, 84, 30)
 	save.pressed.connect(_save_name)
-	root.add_child(save)
+	uv.add_child(save)
 	_msg = UI.label("", 26, UI.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(_msg)
+	uv.add_child(_msg)
+	root.add_child(uc)
 
-	var how := UI.btn("How to play", UI.PANEL2, 80, 28)
+	var how := UI.btn("HOW TO PLAY", UI.BLUE, 84, 30)
 	how.pressed.connect(show_howto)
 	root.add_child(how)
 

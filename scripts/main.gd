@@ -15,6 +15,8 @@ const SCREENS := {
 }
 
 var current: Screen
+var nav: NavBar
+var _bg_glow: TextureRect
 
 
 func _ready() -> void:
@@ -24,6 +26,20 @@ func _ready() -> void:
 	bg.color = UI.BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	var art := TextureRect.new()
+	art.texture = UI.tex("res://art/bg.png")
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(art)
+	nav = NavBar.new()
+	add_child(nav)
+	nav.build(UI.safe_insets(get_viewport_rect().size).y)
+	nav.visible = false
+	nav.selected.connect(func(tab: String) -> void:
+		if current != null and current.tab != tab:
+			go(tab))
 	get_tree().set_auto_accept_quit(false)
 	get_tree().quit_on_go_back = false
 	Game.auth_lost.connect(_on_auth_lost)
@@ -38,8 +54,12 @@ func go(screen: String, args: Dictionary = {}) -> void:
 	s.main = self
 	s.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(s)
+	move_child(s, nav.get_index())  # keep the tab bar above the screen
 	current = s
 	s.start(args)
+	nav.visible = s.tab != ""
+	if nav.visible:
+		nav.set_active(s.tab)
 
 
 func _on_auth_lost() -> void:

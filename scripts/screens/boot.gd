@@ -9,11 +9,16 @@ func start(_args: Dictionary) -> void:
 	var v := make_root()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override("separation", 24)
-	v.add_child(UI.label("WORD DUEL", 80, UI.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
+	var logo := TextureRect.new()
+	logo.texture = UI.tex("res://art/logo.png")
+	logo.custom_minimum_size = Vector2(0, 420)
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	v.add_child(logo)
 	v.add_child(UI.label("Change one letter at a time", 30, UI.MUTED, HORIZONTAL_ALIGNMENT_CENTER))
 	_status = UI.label("Connecting...", 28, UI.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
 	v.add_child(_status)
-	_retry = UI.btn("Retry", UI.ACCENT, 84, 32)
+	_retry = UI.btn("RETRY", UI.ACCENT, 90, 34)
 	_retry.pressed.connect(_connect)
 	_retry.hide()
 	v.add_child(_retry)

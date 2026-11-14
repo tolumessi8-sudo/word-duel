@@ -10,13 +10,18 @@ func start(args: Dictionary) -> void:
 	var v := make_root()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.add_theme_constant_override("separation", 22)
-	v.add_child(UI.label("WORD DUEL", 76, UI.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
+	var logo := TextureRect.new()
+	logo.texture = UI.tex("res://art/logo.png")
+	logo.custom_minimum_size = Vector2(0, 330)
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	v.add_child(logo)
 	v.add_child(UI.label("Race your opponent from one word to another, one letter at a time.", 28, UI.MUTED, HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(UI.spacer(20))
 	var notice := str(args.get("notice", ""))
 	if notice != "":
 		v.add_child(UI.label(notice, 26, UI.ACCENT, HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.label("Choose your username", 32, UI.TEXT, HORIZONTAL_ALIGNMENT_CENTER))
+	v.add_child(UI.label("Choose your username", 34, UI.TEXT, HORIZONTAL_ALIGNMENT_CENTER))
 	_edit = LineEdit.new()
 	_edit.placeholder_text = "3-16 letters, numbers or _"
 	_edit.max_length = 16
@@ -26,7 +31,7 @@ func start(args: Dictionary) -> void:
 	v.add_child(_edit)
 	_err = UI.label("", 26, UI.BAD, HORIZONTAL_ALIGNMENT_CENTER)
 	v.add_child(_err)
-	_btn = UI.btn("START PLAYING", UI.ACCENT, 100, 38)
+	_btn = UI.btn("START PLAYING", UI.GOOD, 108, 40)
 	_btn.pressed.connect(_submit)
 	v.add_child(_btn)
 

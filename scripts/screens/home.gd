@@ -2,105 +2,149 @@ extends Screen
 ## Main menu.
 
 var _name_l: Label
-var _coins_l: Label
+var _coins: PanelContainer
 var _badge: Badge
 var _div_l: Label
-var _tro_l: Label
+var _tro: PanelContainer
+var _rank: PanelContainer
 var _bar: ProgressBar
 var _next_l: Label
 var _event_box: VBoxContainer
 var _weekend_btn: Button
 var _ad_btn: Button
+var _rays: TextureRect
+var _hero: PanelContainer
+var _avatar_slot: Control
+var _streak: PanelContainer
 
 
 func start(args: Dictionary) -> void:
+	tab = "home"
 	var root := make_root(24)
 	root.add_theme_constant_override("separation", 14)
 
-	var top := UI.hbox(12)
+	# ---- top bar: avatar, name, coins, help
+	var top := UI.hbox(14)
+	_avatar_slot = Control.new()
+	_avatar_slot.custom_minimum_size = Vector2(84, 84)
+	top.add_child(_avatar_slot)
+	var who := UI.vbox(0)
+	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	who.alignment = BoxContainer.ALIGNMENT_CENTER
 	_name_l = UI.label("", 36, UI.TEXT)
-	_name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-	top.add_child(_name_l)
-	var chip := UI.panel(UI.PANEL, 20)
-	_coins_l = UI.label("", 30, UI.ACCENT, HORIZONTAL_ALIGNMENT_CENTER)
-	_coins_l.autowrap_mode = TextServer.AUTOWRAP_OFF
-	chip.add_child(_coins_l)
-	top.add_child(chip)
-	var set_btn := UI.btn("Settings", UI.PANEL2, 64, 24)
-	set_btn.custom_minimum_size = Vector2(140, 64)
-	set_btn.pressed.connect(func() -> void: go("settings"))
-	top.add_child(set_btn)
+	_name_l.clip_text = true
+	who.add_child(_name_l)
+	var sub := UI.label("Word Duel", 22, UI.MUTED)
+	sub.autowrap_mode = TextServer.AUTOWRAP_OFF
+	who.add_child(sub)
+	top.add_child(who)
+	_coins = UI.chip("coin", "0", UI.ACCENT)
+	_coins.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	top.add_child(_coins)
+	var help := UI.btn("?", UI.BLUE, 64, 34)
+	help.custom_minimum_size = Vector2(64, 64)
+	help.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	help.pressed.connect(show_howto)
+	top.add_child(help)
 	root.add_child(top)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	root.add_child(scroll)
-	var body := UI.vbox(16)
+	var body := UI.vbox(18)
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(body)
 
-	# division card
-	var card := UI.panel(UI.PANEL, 28)
-	var ch := UI.hbox(20)
-	card.add_child(ch)
-	_badge = Badge.new(1, 150)
-	ch.add_child(_badge)
-	var cv := UI.vbox(8)
-	cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cv.alignment = BoxContainer.ALIGNMENT_CENTER
-	ch.add_child(cv)
-	_div_l = UI.label("", 44, UI.ACCENT)
-	cv.add_child(_div_l)
-	_tro_l = UI.label("", 28, UI.TEXT)
-	cv.add_child(_tro_l)
-	_bar = UI.bar(100, UI.ACCENT, 22)
-	cv.add_child(_bar)
-	_next_l = UI.label("", 24, UI.MUTED)
-	cv.add_child(_next_l)
-	body.add_child(card)
+	# ---- hero: division badge on a rotating sunburst
+	_hero = UI.panel(UI.PANEL, 32)
+	var hv := UI.vbox(6)
+	hv.alignment = BoxContainer.ALIGNMENT_CENTER
+	_hero.add_child(hv)
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(0, 250)
+	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	holder.clip_contents = false
+	hv.add_child(holder)
+	_rays = TextureRect.new()
+	_rays.texture = UI.tex("res://art/fx/sunburst.png")
+	_rays.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_rays.stretch_mode = TextureRect.STRETCH_SCALE
+	_rays.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rays.set_anchors_preset(Control.PRESET_CENTER)
+	_rays.offset_left = -300
+	_rays.offset_right = 300
+	_rays.offset_top = -300
+	_rays.offset_bottom = 300
+	_rays.pivot_offset = Vector2(300, 300)
+	holder.add_child(_rays)
+	_badge = Badge.new(1, 330)
+	_badge.set_anchors_preset(Control.PRESET_CENTER)
+	_badge.offset_left = -165
+	_badge.offset_right = 165
+	_badge.offset_top = -165
+	_badge.offset_bottom = 165
+	_badge.pivot_offset = Vector2(165, 165)
+	holder.add_child(_badge)
+	_div_l = UI.label("", 58, UI.ACCENT, HORIZONTAL_ALIGNMENT_CENTER)
+	hv.add_child(_div_l)
+	var stats := UI.hbox(12)
+	stats.alignment = BoxContainer.ALIGNMENT_CENTER
+	_tro = UI.chip("trophy", "0")
+	_rank = UI.chip("star", "#1")
+	stats.add_child(_tro)
+	stats.add_child(_rank)
+	_streak = UI.chip("flame", "0", Color("ff9a3c"))
+	stats.add_child(_streak)
+	hv.add_child(stats)
+	hv.add_child(UI.spacer(6))
+	_bar = UI.bar(100, UI.ACCENT, 26)
+	hv.add_child(_bar)
+	_next_l = UI.label("", 24, UI.MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+	hv.add_child(_next_l)
+	body.add_child(_hero)
 
 	_event_box = UI.vbox(10)
 	body.add_child(_event_box)
 
-	var play := UI.btn("PLAY RANKED", UI.ACCENT, 120, 46)
+	# ---- play
+	var play := UI.btn("PLAY RANKED", UI.GOOD, 116, 50, "swords")
 	play.pressed.connect(func() -> void: go("match", {"mode": "ranked"}))
 	body.add_child(play)
+	play.pivot_offset = Vector2(336, 64)
+	var pulse := play.create_tween().set_loops()
+	pulse.tween_property(play, "modulate", Color(1.1, 1.1, 1.1), 0.9).set_trans(Tween.TRANS_SINE)
+	pulse.tween_property(play, "modulate", Color.WHITE, 0.9).set_trans(Tween.TRANS_SINE)
 
-	_weekend_btn = UI.btn("", UI.PURPLE, 96, 32)
+	_weekend_btn = UI.btn("", UI.PURPLE, 100, 34, "crown")
 	_weekend_btn.pressed.connect(_on_weekend)
 	body.add_child(_weekend_btn)
 
-	var row1 := UI.hbox(14)
-	var daily := UI.btn("DAILY PUZZLE", UI.BLUE, 92, 28)
+	var row1 := UI.hbox(16)
+	var daily := UI.btn("DAILY", UI.BLUE, 108, 32, "calendar")
 	daily.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	daily.pressed.connect(func() -> void: go("daily"))
 	row1.add_child(daily)
-	var friend := UI.btn("PLAY A FRIEND", Color("14b8a6"), 92, 28)
+	var friend := UI.btn("FRIEND", Color("14b8a6"), 108, 32, "friends")
 	friend.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	friend.pressed.connect(func() -> void: go("friend"))
 	row1.add_child(friend)
 	body.add_child(row1)
 
-	var row2 := UI.hbox(12)
-	for item in [["Divisions", "divisions"], ["Leaderboard", "leaderboard"], ["Events", "events"]]:
-		var b := UI.btn(str(item[0]), UI.PANEL2, 80, 25)
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var target: String = item[1]
-		b.pressed.connect(func() -> void: go(target))
-		row2.add_child(b)
-	body.add_child(row2)
-
-	_ad_btn = UI.btn("", UI.PANEL2, 80, 26)
+	_ad_btn = UI.btn("", Color("c2410c"), 88, 28, "video")
 	_ad_btn.pressed.connect(_on_watch_ad)
 	body.add_child(_ad_btn)
-
-	var how := UI.btn("How to play", UI.PANEL2, 70, 24)
-	how.pressed.connect(show_howto)
-	body.add_child(how)
+	body.add_child(UI.spacer(6))
 
 	root.add_child(banner_strip())
+
+	# gentle idle animation
+	_rays.create_tween().set_loops().tween_property(_rays, "rotation", TAU, 50.0)
+	var breathe := _badge.create_tween().set_loops()
+	breathe.tween_property(_badge, "scale", Vector2(1.04, 1.04), 1.4).set_trans(Tween.TRANS_SINE)
+	breathe.tween_property(_badge, "scale", Vector2.ONE, 1.4).set_trans(Tween.TRANS_SINE)
 
 	Game.profile_changed.connect(_refresh)
 	_refresh()
@@ -128,12 +172,26 @@ func _refresh() -> void:
 		return
 	var d := Game.division()
 	var tro := Game.pint("trophies")
-	_name_l.text = str(Game.profile.get("name", ""))
-	_coins_l.text = "%d coins" % Game.coins()
+	var nm := str(Game.profile.get("name", ""))
+	_name_l.text = nm
+	for c in _avatar_slot.get_children():
+		c.queue_free()
+	var av := UI.avatar(nm, 84)
+	_avatar_slot.add_child(av)
+	UI.chip_set(_coins, str(Game.coins()))
 	_badge.division = d
-	_div_l.text = Game.division_name(d)
-	_div_l.add_theme_color_override("font_color", Game.division_color(d))
-	_tro_l.text = "%d trophies   Rank #%d" % [tro, Game.pint("rank", 1)]
+	var col := Game.division_color(d)
+	_div_l.text = Game.division_name(d).to_upper()
+	_div_l.add_theme_color_override("font_color", col.lightened(0.25))
+	_rays.modulate = Color(col.lightened(0.3), 0.55)
+	_hero.add_theme_stylebox_override("panel", _hero_box(col))
+	UI.chip_set(_tro, str(tro))
+	UI.chip_set(_rank, "#%d" % Game.pint("rank", 1))
+	var streak := Game.pint("streak")
+	_streak.visible = streak >= 2
+	UI.chip_set(_streak, str(streak))
+	var fill := UI.box(col, 13)
+	_bar.add_theme_stylebox_override("fill", fill)
 	var floor_t := Game.pint("div_floor")
 	var next_v = Game.profile.get("next_floor")
 	if next_v == null:
@@ -144,24 +202,37 @@ func _refresh() -> void:
 		var nf := int(next_v)
 		_bar.max_value = maxf(1.0, float(nf - floor_t))
 		_bar.value = float(tro - floor_t)
-		_next_l.text = "%d more to %s" % [nf - tro, Game.division_name(d + 1)]
+		_next_l.text = "%d more trophies to %s" % [nf - tro, Game.division_name(d + 1)]
 	var weekend: bool = bool(Game.profile.get("weekend", false))
-	_weekend_btn.text = "WEEKEND MATCH  -  OPEN NOW!" if weekend else "WEEKEND MATCH  -  Sat & Sun"
-	var pc := UI.PURPLE if weekend else UI.PURPLE.darkened(0.45)
-	_weekend_btn.add_theme_stylebox_override("normal", UI.box(pc, 22))
+	_weekend_btn.text = "WEEKEND MATCH - OPEN!" if weekend else "WEEKEND MATCH - SAT & SUN"
+	var pc := UI.PURPLE if weekend else UI.PURPLE.darkened(0.5)
+	_weekend_btn.add_theme_stylebox_override("normal", UI.chunk(pc, 30, 10))
 	var left := Game.pint("ads_left", 8)
-	_ad_btn.text = "Watch an ad: +25 coins  (%d left today)" % left
+	_ad_btn.text = "WATCH AD: +25 COINS  (%d)" % left
 	_ad_btn.disabled = left <= 0
 	for c in _event_box.get_children():
 		_event_box.remove_child(c)
 		c.queue_free()
 	for e in Game.profile.get("events", []):
-		var p := UI.panel(Color("3b2a05"), 20)
-		var v := UI.vbox(2)
-		p.add_child(v)
-		v.add_child(UI.label("EVENT: " + str(e.get("title", "")), 28, UI.ACCENT))
-		v.add_child(UI.label(str(e.get("description", "")), 24, UI.TEXT))
+		var p := UI.panel(Color("4a3406"), 22)
+		var h := UI.hbox(14)
+		p.add_child(h)
+		h.add_child(UI.icon("gift", 64))
+		var v := UI.vbox(0)
+		v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		v.add_child(UI.label(str(e.get("title", "")), 30, UI.ACCENT, HORIZONTAL_ALIGNMENT_LEFT, true))
+		v.add_child(UI.label(str(e.get("description", "")), 22, UI.TEXT))
+		h.add_child(v)
 		_event_box.add_child(p)
+
+
+func _hero_box(col: Color) -> StyleBoxFlat:
+	var base := Color("16263f").lerp(col, 0.16)
+	var s := UI.card_box(base, 34)
+	s.border_color = col.darkened(0.1)
+	s.set_border_width_all(3)
+	s.border_width_bottom = 8
+	return s
 
 
 func _on_weekend() -> void:

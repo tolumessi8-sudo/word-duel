@@ -47,7 +47,7 @@ Google Play requires an **AAB** for new apps. That needs Godot's Gradle build (s
 project.godot, export_presets.cfg     Godot project + Android export settings
 data/words.txt                        dictionary (2,857 common 3-6 letter words) used by the game AND the database
 scripts/                              GDScript: autoloads (config, api, game, sfx, ads), screens/, widgets/
-art/badges/div_1.png ... div_7.png    OPTIONAL: drop your own badge sprites here, they replace the drawn shields
+art/                                  sprites: badges, icons, avatars, logo, background, fx; fonts (Lilita One + Nunito, OFL)
 backend/                              SQL for Supabase (tables, game logic) + seed/puzzles.csv
 tests/                                headless smoke test + mock server (runs in CI)
 .github/workflows/build-android.yml   cloud APK build
