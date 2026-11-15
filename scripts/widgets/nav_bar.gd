@@ -14,6 +14,7 @@ const TABS := [
 
 var _items := {}
 var _active := ""
+var _safe := 0.0
 
 
 func _init() -> void:
@@ -21,6 +22,7 @@ func _init() -> void:
 
 
 func build(safe_bottom: float) -> void:
+	_safe = safe_bottom
 	anchor_left = 0.0
 	anchor_right = 1.0
 	anchor_top = 1.0
@@ -92,6 +94,12 @@ func build(safe_bottom: float) -> void:
 			selected.emit(key))
 		row.add_child(b)
 		_items[key] = {"pill": pill, "icon": ic, "label": l}
+
+
+## Raise the bar above a real banner ad at the bottom of the screen.
+func set_lift(px: float) -> void:
+	offset_bottom = -px
+	offset_top = -(UI.NAV_H + _safe + px)
 
 
 func set_active(tab: String) -> void:

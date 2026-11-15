@@ -28,7 +28,7 @@ func make_root(pad := 28) -> VBoxContainer:
 	m.add_theme_constant_override("margin_left", pad)
 	m.add_theme_constant_override("margin_right", pad)
 	m.add_theme_constant_override("margin_top", pad + int(safe.x))
-	m.add_theme_constant_override("margin_bottom", (UI.NAV_H + int(safe.y) + 10) if tab != "" else pad + int(safe.y))
+	m.add_theme_constant_override("margin_bottom", ((UI.NAV_H + int(safe.y) + 10) if tab != "" else pad + int(safe.y)) + Ads.native_banner_height())
 	add_child(m)
 	var v := UI.vbox(16)
 	m.add_child(v)
@@ -78,5 +78,5 @@ func banner_strip() -> Control:
 	var p := UI.panel(Color("0b1422"), 12)
 	p.custom_minimum_size = Vector2(0, Ads.banner_height())
 	p.add_child(UI.label("Ad space (test banner)", 22, UI.MUTED, HORIZONTAL_ALIGNMENT_CENTER))
-	p.visible = Ads.banner_enabled
+	p.visible = Ads.banner_enabled and not Ads.is_real()
 	return p

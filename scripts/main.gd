@@ -40,6 +40,7 @@ func _ready() -> void:
 	add_child(nav)
 	nav.build(UI.safe_insets(get_viewport_rect().size).y)
 	nav.visible = false
+	Ads.banner_changed.connect(func() -> void: nav.set_lift(Ads.native_banner_height()))
 	nav.selected.connect(func(tab: String) -> void:
 		if current != null and current.tab != tab:
 			go(tab))

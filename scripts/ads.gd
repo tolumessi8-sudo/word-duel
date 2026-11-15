@@ -9,6 +9,7 @@ extends Node
 signal banner_changed
 
 var banner_enabled := true
+var native: RefCounted  # real AdMob module, only present in the "real ads" build on Android
 var _layer: CanvasLayer
 signal _ad_closed(completed: bool)
 
@@ -17,17 +18,43 @@ func _ready() -> void:
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
 	add_child(_layer)
+	if OS.get_name() == "Android" and ResourceLoader.exists("res://addons/admob/plugin.cfg") \
+			and ResourceLoader.exists("res://scripts/ads_admob.gd"):
+		native = load("res://scripts/ads_admob.gd").new(get_tree())
+		native.start()
+		await get_tree().process_frame
+		native.show_banner(banner_enabled)
+		banner_changed.emit()
+
+
+## True when real AdMob ads are active (so no simulated ads or placeholder strip).
+func is_real() -> bool:
+	return native != null
+
+
+## Viewport units covered by the real banner at the bottom of the screen (0 if none).
+func native_banner_height() -> int:
+	if native == null or not banner_enabled:
+		return 0
+	var win := DisplayServer.window_get_size()
+	if win.x <= 0:
+		return 0
+	var density := maxf(1.0, float(DisplayServer.screen_get_dpi()) / 160.0)
+	return int(ceil(50.0 * density * 720.0 / float(win.x)))
 
 
 ## Height reserved at the bottom of the screen for the banner.
 func banner_height() -> int:
+	if native != null:
+		return 0
 	return 90 if banner_enabled else 0
 
 
 func set_banner(on: bool) -> void:
 	banner_enabled = on
+	if native != null:
+		native.show_banner(on)
 	banner_changed.emit()
-	# REAL ADS: show or hide the AdMob banner here (Config.ADMOB_BANNER).
 
 
 ## Call after every finished match. Shows a full-screen ad every Config.INTERSTITIAL_EVERY matches.
@@ -39,13 +66,16 @@ func after_match() -> void:
 
 
 func show_interstitial() -> void:
-	# REAL ADS: load + show Config.ADMOB_INTERSTITIAL here and await its closed signal.
+	if native != null:
+		await native.show_interstitial()
+		return
 	await _fake_ad("Interstitial ad (test)", 3, false)
 
 
 ## Returns true if the player watched the ad to the end and earned the reward.
 func show_rewarded() -> bool:
-	# REAL ADS: load + show Config.ADMOB_REWARDED here, return true when the reward callback fires.
+	if native != null:
+		return await native.show_rewarded()
 	return await _fake_ad("Rewarded ad (test)\nWatch to the end to earn your reward", 5, true)
 
 

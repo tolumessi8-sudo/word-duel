@@ -1,0 +1,134 @@
+name: Build Android APK (real ads)
+
+# Builds a Gradle-based APK that includes the Poing Studios AdMob plugin.
+# Manual only: press "Run workflow". Publishes the APK to the "ads-preview" release.
+# Uses Google's TEST ad ids from scripts/config.gd until you put your own AdMob ids there.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+  ADMOB_PLUGIN_REF: "4dc91441c4baa185a237a6b9156fb8ffff9a7524"
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Download Godot and the Android export templates (with the Gradle source template)
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable"
+          mkdir -p ~/godot-bin
+          curl -fsSL -o /tmp/godot.zip "$BASE/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d ~/godot-bin
+          curl -fsSL -o /tmp/templates.tpz "$BASE/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          T=~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mkdir -p "$T"
+          unzip -oj -q /tmp/templates.tpz "templates/android_debug.apk" "templates/android_release.apk" "templates/android_source.zip" "templates/version.txt" -d "$T"
+          chmod +x ~/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64
+          echo "GODOT=$HOME/godot-bin/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+          ls -la "$T"
+
+      - name: Android SDK parts and debug keystore
+        run: |
+          set -euo pipefail
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+          mkdir -p ~/.local/share/godot/keystores
+          keytool -genkeypair -keystore ~/.local/share/godot/keystores/debug.keystore \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Build the AdMob Android library from source
+        run: |
+          set -euo pipefail
+          git clone https://github.com/poingstudios/godot-admob-plugin "$RUNNER_TEMP/admob"
+          cd "$RUNNER_TEMP/admob"
+          git checkout "$ADMOB_PLUGIN_REF"
+          cd platforms/android
+          chmod +x ./scripts/unix/download_godot.sh ./gradlew
+          ./scripts/unix/download_godot.sh "$GODOT_VERSION"
+          ./gradlew build -PgodotVersion="$GODOT_VERSION" --parallel
+          ./gradlew zipPlugins -PgodotVersion="$GODOT_VERSION" --parallel
+          ls -la .output
+
+      - name: Add the AdMob addon, Android build template and real-ads code to the project
+        run: |
+          set -euo pipefail
+          ADM="$RUNNER_TEMP/admob/platforms"
+          mkdir -p addons
+          cp -r "$ADM/godot_editor/addons/admob" addons/admob
+          mkdir -p addons/admob/android/bin
+          unzip -q -o "$ADM/android/.output/android-template-v${GODOT_VERSION}.zip" -d addons/admob/android/bin
+          cp ads_native/ads_admob.gd scripts/ads_admob.gd
+          # Android Gradle build template
+          mkdir -p android/build
+          unzip -q -o ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/android_source.zip -d android/build
+          echo "${GODOT_VERSION}.stable" > android/.build_version
+          touch android/build/.gdignore
+          # enable the editor plugin + AdMob settings (Google test app id)
+          python3 - <<'PY'
+          import re
+          p = open("project.godot").read()
+          p += '''
+          [editor_plugins]
+
+          enabled=PackedStringArray("res://addons/admob/plugin.cfg")
+
+          [admob]
+
+          general/android/enabled=true
+          general/android/app_id="ca-app-pub-3940256099942544~3347511713"
+          '''.replace("\n          ", "\n")
+          open("project.godot", "w").write(p)
+          e = open("export_presets.cfg").read()
+          e = e.replace("gradle_build/use_gradle_build=false", "gradle_build/use_gradle_build=true")
+          e = e.replace('gradle_build/min_sdk=""', 'gradle_build/min_sdk="24"')
+          e = e.replace('gradle_build/target_sdk=""', 'gradle_build/target_sdk="35"')
+          e = e.replace('export_filter="all_resources"', 'export_filter="all_resources"')
+          open("export_presets.cfg", "w").write(e)
+          PY
+          tail -12 project.godot
+
+      - name: Import the project
+        run: |
+          "$GODOT" --headless --path . --import || true
+          "$GODOT" --headless --path . --import 2>&1 | tail -30
+
+      - name: Set version code
+        run: sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/" export_presets.cfg
+
+      - name: Export debug APK (Gradle)
+        run: |
+          mkdir -p build
+          "$GODOT" --headless --path . --export-debug "Android" build/word-duel-ads-debug.apk 2>&1 | tail -60
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose build/word-duel-ads-debug.apk
+          ls -la build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: word-duel-ads-apk
+          path: build/*.apk
+
+      - name: Publish to the "ads-preview" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ads-preview --yes --cleanup-tag || true
+          gh release create ads-preview build/*.apk \
+            --title "Word Duel - real ads preview" \
+            --notes "Built from commit ${GITHUB_SHA::7} (build #${{ github.run_number }}). Uses Google's TEST ad ids. Debug-signed, for testing only." \
+            --prerelease --target "$GITHUB_SHA"
