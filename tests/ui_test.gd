@@ -63,6 +63,7 @@ func _run() -> void:
 	api.base_url = "http://127.0.0.1:8765"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://word_duel.cfg"))
 	game.clear_account()
+	game.tutorial_done = false
 	check(game.words.size() > 2000, "dictionary loaded (%d words)" % game.words.size())
 	check(game.is_word("fire") and not game.is_word("zzzz"), "word lookup")
 	check(game.differs_by_one("cold", "cord"), "one-letter check")
