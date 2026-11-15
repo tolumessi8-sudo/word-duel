@@ -77,6 +77,9 @@ func _run() -> void:
 	await create_timer(0.5).timeout
 	check(game.coins() == 100, "coins shown = 100")
 
+	var stoppers := _stoppers_in_scrolls(main.current)
+	check(stoppers == 0, "nothing inside scroll lists blocks touch drags (%d found)" % stoppers)
+
 	# rewarded ad flow on home
 	main.current._on_watch_ad()
 	await create_timer(0.4).timeout
@@ -162,3 +165,13 @@ func _run() -> void:
 
 	print("DONE fails=%d" % fails)
 	quit(1 if fails > 0 else 0)
+
+
+func _stoppers_in_scrolls(n: Node, inside := false) -> int:
+	var count := 0
+	for c in n.get_children():
+		var in_scroll := inside or c is ScrollContainer
+		if inside and c is Control and not (c is ScrollContainer) and (c as Control).mouse_filter == Control.MOUSE_FILTER_STOP:
+			count += 1
+		count += _stoppers_in_scrolls(c, in_scroll)
+	return count

@@ -34,6 +34,7 @@ func _ready() -> void:
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(art)
+	get_tree().node_added.connect(_make_scroll_friendly)
 	nav = NavBar.new()
 	add_child(nav)
 	nav.build(UI.safe_insets(get_viewport_rect().size).y)
@@ -74,3 +75,23 @@ func _notification(what: int) -> void:
 			current.on_back()
 	elif what == NOTIFICATION_WM_CLOSE_REQUEST:
 		get_tree().quit()
+
+
+## Touch drags only reach a ScrollContainer if every control between the finger and the
+## scroller lets the event bubble up (mouse_filter PASS). Panels and buttons default to STOP,
+## which made lists impossible to scroll by dragging. Fix them all as they enter the tree.
+func _make_scroll_friendly(n: Node) -> void:
+	if not (n is Control):
+		return
+	var c := n as Control
+	if c is ScrollContainer:
+		(c as ScrollContainer).scroll_deadzone = 10
+		return
+	if c.mouse_filter != Control.MOUSE_FILTER_STOP:
+		return
+	var p := c.get_parent()
+	while p != null:
+		if p is ScrollContainer:
+			c.mouse_filter = Control.MOUSE_FILTER_PASS
+			return
+		p = p.get_parent()
