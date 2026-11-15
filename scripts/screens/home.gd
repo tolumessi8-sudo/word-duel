@@ -35,12 +35,20 @@ func start(args: Dictionary) -> void:
 	_name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_name_l.clip_text = true
 	who.add_child(_name_l)
-	var sub := UI.label("Word Duel", 22, UI.MUTED)
+	var sub := UI.label("Tap avatar for profile & shop", 20, UI.MUTED)
 	sub.autowrap_mode = TextServer.AUTOWRAP_OFF
 	who.add_child(sub)
 	top.add_child(who)
 	_coins = UI.chip("coin", "0", UI.ACCENT)
 	_coins.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var cb := Button.new()
+	cb.flat = true
+	cb.focus_mode = Control.FOCUS_NONE
+	cb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for st in ["normal", "hover", "pressed", "focus"]:
+		cb.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+	cb.pressed.connect(func() -> void: go("profile"))
+	_coins.add_child(cb)
 	top.add_child(_coins)
 	var help := UI.btn("?", UI.BLUE, 64, 34)
 	help.custom_minimum_size = Vector2(64, 64)
@@ -176,8 +184,16 @@ func _refresh() -> void:
 	_name_l.text = nm
 	for c in _avatar_slot.get_children():
 		c.queue_free()
-	var av := UI.avatar(nm, 84)
+	var av := UI.my_avatar(84)
 	_avatar_slot.add_child(av)
+	var tap := Button.new()
+	tap.flat = true
+	tap.focus_mode = Control.FOCUS_NONE
+	tap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for st in ["normal", "hover", "pressed", "focus"]:
+		tap.add_theme_stylebox_override(st, StyleBoxEmpty.new())
+	tap.pressed.connect(func() -> void: go("profile"))
+	_avatar_slot.add_child(tap)
 	UI.chip_set(_coins, str(Game.coins()))
 	_badge.division = d
 	var col := Game.division_color(d)

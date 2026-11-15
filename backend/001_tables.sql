@@ -41,6 +41,9 @@ create table wd.players (
   last_daily date,
   ad_claims int not null default 0,
   ad_claim_day date,
+  avatar int not null default -1,
+  frame int not null default 0,
+  owned text[] not null default '{}',
   created_at timestamptz not null default now(),
   last_seen timestamptz not null default now()
 );
@@ -76,6 +79,10 @@ create table wd.matches (
   p2_hints int not null default 0,
   p1_doubled boolean not null default false,
   p2_doubled boolean not null default false,
+  p1_emote text,
+  p1_emote_n int not null default 0,
+  p2_emote text,
+  p2_emote_n int not null default 0,
   result text check (result in ('p1', 'p2', 'draw')),
   reason text,
   p1_delta int,

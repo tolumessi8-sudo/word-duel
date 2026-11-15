@@ -31,7 +31,7 @@ daily_scores = []
 def profile(p):
     return {'id': p['id'], 'name': p['name'], 'trophies': p['trophies'], 'coins': p['coins'], 'division': 1,
             'div_floor': 0, 'next_floor': 100, 'wins': p['wins'], 'losses': 0, 'draws': 0, 'streak': 0,
-            'best_streak': 0, 'rank': 1, 'weekend': False, 'daily_done': False, 'daily_streak': 0, 'ads_left': 8,
+            'best_streak': 0, 'rank': 1, 'weekend': False, 'daily_done': False, 'daily_streak': 0, 'ads_left': 8, 'avatar': p.get('avatar', -1), 'frame': p.get('frame', 0), 'owned': p.get('owned', []),
             'events': [{'title': 'Harmattan Words Week', 'description': 'Double coins.', 'kind': 'coin_x',
                         'multiplier': 2, 'ends_in': 100000}]}
 
@@ -43,7 +43,7 @@ def state(m, me):
             'division': 1, 'starts_in': m['starts'] - now, 'time_left': 120 - (now - m['starts']),
             'my_words': m['words'], 'my_moves': len(m['words']), 'my_dist': m['dist'],
             'my_done': bool(m['done']), 'my_hints': m['hints'], 'opp_name': 'Kemi_Plays', 'opp_trophies': 12,
-            'opp_moves': 1, 'opp_dist': max(0, m['shortest'] - 1), 'opp_done': False, 'opp_bot': True,
+            'opp_avatar': -1, 'opp_frame': 0, 'opp_emote': 'nice' if m.get('emoted') else None, 'opp_emote_n': 1 if m.get('emoted') else 0, 'opp_moves': 1, 'opp_dist': max(0, m['shortest'] - 1), 'opp_done': False, 'opp_bot': True,
             'result': res, 'reason': 'finished' if res else None, 'trophy_delta': 25 if res else None,
             'coin_delta': 50 if res else None, 'doubled': m['doubled']}
 
@@ -101,6 +101,15 @@ def handle(fn, a):
     if fn == 'submit_daily':
         daily_scores.append((p['name'], len(a['p_path'])))
         return {'ok': True, 'moves': len(a['p_path']), 'best_moves': len(a['p_path']), 'rank': 1, 'coins_added': 35, 'streak': 1, 'profile': profile(p)}
+    if fn == 'buy_item':
+        price = {'av_7': 200, 'fr_1': 150}.get(a['p_item'], 9999)
+        if p['coins'] < price: return {'ok': False, 'error': 'not_enough_coins'}
+        p['coins'] -= price; p.setdefault('owned', []).append(a['p_item']); return {'ok': True, 'profile': profile(p)}
+    if fn == 'equip_item':
+        p['avatar' if a['p_slot'] == 'avatar' else 'frame'] = a['p_idx']; return {'ok': True, 'profile': profile(p)}
+    if fn == 'send_emote':
+        if a['mid'] in matches: matches[a['mid']]['emoted'] = True
+        return {'ok': True}
     if fn == 'leaderboard':
         return {'ok': True, 'rows': [{'name': 'Ada', 'trophies': 250, 'division': 3, 'me': False}, {'name': p['name'], 'trophies': 0, 'division': 1, 'me': True}], 'my_rank': 2}
     if fn == 'daily_leaderboard':

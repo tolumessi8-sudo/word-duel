@@ -101,6 +101,8 @@ func _run() -> void:
 	if dlg:
 		dlg.chosen.emit(0)
 	check(await wait_until(func(): return m._board.hint_pos >= 0), "hint shown on board")
+	m._emote("gg", "GG")
+	check(await wait_until(func(): return m._last_emote_n >= 1), "bot emote reply shown")
 	await solve(m._board)
 	check(await wait_until(func(): return m.finished), "match finished after solving")
 	check(str(m.st.get("result")) == "win", "result is win")
@@ -118,6 +120,22 @@ func _run() -> void:
 	if _dlg:
 		_dlg.chosen.emit(2)
 	check(await wait_until(func(): return screen_is("home")), "daily -> home")
+
+	# ---- profile / shop
+	main.go("profile")
+	await create_timer(0.5).timeout
+	check(screen_is("profile"), "profile opens")
+	main.current._tap("frame", 1, "fr_1", 150, "Gold frame")
+	await create_timer(0.3).timeout
+	var bd = find_dialog(main.current)
+	check(bd != null, "buy confirmation shown")
+	if bd:
+		bd.chosen.emit(0)
+	check(await wait_until(func(): return game.pint("frame") == 1), "frame bought and equipped")
+	check((game.profile.get("owned", []) as Array).has("fr_1"), "owned list updated")
+	await create_timer(0.4).timeout
+	main.current._tap("avatar", 3, "av_3", 0, "Robot")
+	check(await wait_until(func(): return game.pint("avatar") == 3), "free avatar equipped")
 
 	# ---- other screens
 	for s in ["divisions", "events", "settings", "friend"]:

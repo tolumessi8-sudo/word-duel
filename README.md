@@ -48,7 +48,7 @@ project.godot, export_presets.cfg     Godot project + Android export settings
 data/words.txt                        dictionary (2,857 common 3-6 letter words) used by the game AND the database
 scripts/                              GDScript: autoloads (config, api, game, sfx, ads), screens/, widgets/
 art/                                  sprites: badges, icons, avatars, logo, background, fx; fonts (Lilita One + Nunito, OFL)
-backend/                              SQL for Supabase (tables, game logic) + seed/puzzles.csv
+backend/                              SQL for Supabase (001 tables, 002 game logic, 003 cosmetics/emotes migration) + seed/puzzles.csv
 tests/                                headless smoke test + mock server (runs in CI)
 .github/workflows/build-android.yml   cloud APK build
 ```

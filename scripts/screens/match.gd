@@ -20,6 +20,9 @@ var _timer_l: Label
 var _opp_name: Label
 var _opp_info: Label
 var _opp_av: TextureRect
+var _me_panel: Control
+var _opp_panel: Control
+var _last_emote_n := -1
 var _opp_bar: ProgressBar
 var _me_info: Label
 var _me_bar: ProgressBar
@@ -116,6 +119,14 @@ func _build() -> void:
 	_hint_btn = UI.btn("HINT  (15 coins / ad)", Color("3b82f6"), 68, 24, "bulb")
 	_hint_btn.pressed.connect(_on_hint)
 	root.add_child(_hint_btn)
+	var em := UI.hbox(8)
+	for e in [["gg", "GG"], ["wow", "WOW"], ["oops", "OOPS"], ["fast", "FAST!"], ["nice", "NICE"], ["hmm", "HMM"]]:
+		var eb := UI.btn(e[1], Color("5b4b8a"), 56, 20)
+		eb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		eb.custom_minimum_size = Vector2(0, 56)
+		eb.pressed.connect(_emote.bind(e[0], e[1]))
+		em.add_child(eb)
+	root.add_child(em)
 
 	_kb = Keyboard.new()
 	_kb.key.connect(_board.input_letter)
@@ -156,7 +167,7 @@ func _side(opp: bool) -> Control:
 	var v := UI.vbox(8)
 	p.add_child(v)
 	var row := UI.hbox(10)
-	var av := UI.avatar("opponent" if opp else str(Game.profile.get("name", "")), 68)
+	var av := UI.avatar("opponent", 68) if opp else UI.my_avatar(68)
 	row.add_child(av)
 	var col := UI.vbox(0)
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -177,8 +188,10 @@ func _side(opp: bool) -> Control:
 		_opp_info = info
 		_opp_bar = bar
 		_opp_av = av
+		_opp_panel = p
 	else:
 		_me_info = info
+		_me_panel = p
 		_me_bar = bar
 	return p
 
@@ -273,7 +286,13 @@ func _apply_state(s: Dictionary) -> void:
 	var m := str(s.get("mode", mode))
 	_title.text = "FRIEND MATCH" if m == "friendly" else "%s  -  %s" % [m.to_upper(), Game.division_name(int(s.get("division", 1)))]
 	_opp_name.text = str(s.get("opp_name", "Opponent"))
-	_opp_av.texture = UI.tex("res://art/avatars/av_%d.png" % UI.avatar_index(_opp_name.text))
+	UI.set_avatar(_opp_av, _opp_name.text, int(_f(s.get("opp_avatar", -1))), int(_f(s.get("opp_frame", 0))))
+	var en := int(_f(s.get("opp_emote_n", 0)))
+	if _last_emote_n < 0:
+		_last_emote_n = en
+	elif en > _last_emote_n:
+		_last_emote_n = en
+		_bubble(_opp_panel, str(s.get("opp_emote", "")), false)
 	_opp_bar.max_value = shortest
 	_opp_bar.value = clampi(shortest - int(_f(s.get("opp_dist"), shortest)), 0, shortest)
 	_opp_info.text = "FINISHED" if bool(s.get("opp_done", false)) else _moves_text(int(_f(s.get("opp_moves"))))
@@ -389,6 +408,41 @@ func _reason_text(res: String, reason: String) -> String:
 		"forfeit":
 			return "Your opponent left the match." if res == "win" else "You left the match."
 	return "You reached the target first!" if res == "win" else "Your opponent got there first."
+
+
+const EMOTES := {"gg": "GG!", "wow": "WOW!", "oops": "OOPS!", "fast": "FAST!", "nice": "NICE!", "hmm": "HMM..."}
+
+
+func _emote(id: String, _label: String) -> void:
+	if match_id == "" or finished:
+		return
+	_bubble(_me_panel, EMOTES.get(id, id), true)
+	Game.call_api("send_emote", {"mid": match_id, "p_emote": id})
+
+
+func _bubble(host: Control, text: String, mine: bool) -> void:
+	if host == null or not is_inside_tree() or text == "":
+		return
+	var b := PanelContainer.new()
+	b.add_theme_stylebox_override("panel", UI.box(Color("fff7d6") if mine else Color("ffe0e6"), 20, 3, UI.ACCENT if mine else UI.BAD))
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.z_index = 90
+	var l := UI.label(str(EMOTES.get(text, text)), 30, Color("3a2a05"), HORIZONTAL_ALIGNMENT_CENTER, true)
+	l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	b.add_child(l)
+	add_child(b)
+	await get_tree().process_frame
+	if not is_instance_valid(b):
+		return
+	b.global_position = host.global_position + Vector2((host.size.x - b.size.x) / 2.0, host.size.y - 14)
+	b.pivot_offset = b.size / 2.0
+	b.scale = Vector2(0.4, 0.4)
+	var tw := b.create_tween()
+	tw.tween_property(b, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(1.8)
+	tw.tween_property(b, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(b.queue_free)
+	UI.buzz(15)
 
 
 func _count_up(l: Label, to: int, fmt: String, delay := 0.0) -> void:

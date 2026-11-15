@@ -31,7 +31,7 @@ func start(_args: Dictionary) -> void:
 	var uv := UI.vbox(14)
 	uc.add_child(uv)
 	var urow := UI.hbox(16)
-	urow.add_child(UI.avatar(str(Game.profile.get("name", "")), 84))
+	urow.add_child(UI.my_avatar(84))
 	var ucol := UI.vbox(0)
 	ucol.alignment = BoxContainer.ALIGNMENT_CENTER
 	ucol.size_flags_horizontal = Control.SIZE_EXPAND_FILL

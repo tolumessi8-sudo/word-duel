@@ -87,7 +87,7 @@ func _load() -> void:
 			rl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			rw.add_child(rl)
 		h.add_child(rw)
-		h.add_child(UI.avatar(str(row.get("name", "")), 64))
+		h.add_child(UI.avatar(str(row.get("name", "")), 64, int(row.get("avatar", -1)), int(row.get("frame", 0))))
 		var nl := UI.label(str(row.get("name", "")), 30, UI.ACCENT if me else UI.TEXT, HORIZONTAL_ALIGNMENT_LEFT, true)
 		nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nl.size_flags_vertical = Control.SIZE_SHRINK_CENTER

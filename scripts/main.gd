@@ -12,6 +12,7 @@ const SCREENS := {
 	"leaderboard": preload("res://scripts/screens/leaderboard.gd"),
 	"events": preload("res://scripts/screens/events.gd"),
 	"settings": preload("res://scripts/screens/settings.gd"),
+	"profile": preload("res://scripts/screens/profile.gd"),
 }
 
 var current: Screen

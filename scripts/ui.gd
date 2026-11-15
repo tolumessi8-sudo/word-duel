@@ -63,19 +63,71 @@ static func icon(name: String, px := 48) -> TextureRect:
 	return t
 
 
+const FRAMES := [Color("2c4466"), Color("ffc933"), Color("ff4d8d"), Color("5ee0d0"), Color("b07cff"), Color("ff6a2c")]
+const FRAME_NAMES := ["Plain", "Gold", "Pink", "Aqua", "Violet", "Blaze"]
+const FRAME_PRICES := [0, 150, 250, 250, 400, 800]
+const AVATAR_NAMES := ["Cat", "Bear", "Frog", "Robot", "Alien", "Fox", "Owl", "Lion", "Wolf", "Tiger", "Penguin", "Panda"]
+const AVATAR_PRICES := [0, 0, 0, 0, 0, 0, 200, 200, 300, 300, 500, 500]
+
+
+## Default avatar for a name (free ones only: 0..5).
 static func avatar_index(seed_text: String) -> int:
-	return int(seed_text.hash() % 12)
+	return int(seed_text.hash() % 6)
 
 
-static func avatar(seed_text: String, px := 88) -> TextureRect:
+static func _style_avatar(t: TextureRect, seed_text: String, idx: int, frame: int) -> void:
+	var i := idx if idx >= 0 and idx < 12 else avatar_index(seed_text)
+	t.texture = tex("res://art/avatars/av_%d.png" % i)
+	var ring: Panel = t.get_meta("ring")
+	var px := t.custom_minimum_size.x
+	var f := clampi(frame, 0, FRAMES.size() - 1)
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color(0, 0, 0, 0)
+	s.set_corner_radius_all(int(px / 2))
+	s.set_border_width_all(maxi(3, int(px / 14)))
+	s.border_color = FRAMES[f]
+	if f > 0:
+		s.shadow_color = Color(FRAMES[f], 0.6)
+		s.shadow_size = maxi(4, int(px / 8))
+	ring.add_theme_stylebox_override("panel", s)
+
+
+## Round avatar. idx < 0 means "default for this name"; frame is an index into FRAMES.
+static func avatar(seed_text: String, px := 88, idx := -1, frame := 0) -> TextureRect:
 	var t := TextureRect.new()
-	t.texture = tex("res://art/avatars/av_%d.png" % avatar_index(seed_text))
 	t.custom_minimum_size = Vector2(px, px)
 	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var ring := Panel.new()
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.anchor_right = 1.0
+	ring.anchor_bottom = 1.0
+	t.add_child(ring)
+	t.set_meta("ring", ring)
+	_style_avatar(t, seed_text, idx, frame)
 	return t
+
+
+static func set_avatar(t: TextureRect, seed_text: String, idx: int, frame: int) -> void:
+	_style_avatar(t, seed_text, idx, frame)
+
+
+static func _game() -> Node:
+	return (Engine.get_main_loop() as SceneTree).root.get_node("Game")
+
+
+## The local player's avatar with their chosen picture and frame.
+static func my_avatar(px := 88) -> TextureRect:
+	var p: Dictionary = _game().profile
+	return avatar(str(p.get("name", "")), px, int(p.get("avatar", -1)), int(p.get("frame", 0)))
+
+
+static func my_avatar_index() -> int:
+	var p: Dictionary = _game().profile
+	var a := int(p.get("avatar", -1))
+	return a if a >= 0 else avatar_index(str(p.get("name", "")))
 
 
 ## Rounded pill with an icon and a number/text. Update with chip_set(chip, text).
