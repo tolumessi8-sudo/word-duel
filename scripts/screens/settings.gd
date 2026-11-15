@@ -58,6 +58,9 @@ func start(_args: Dictionary) -> void:
 	var how := UI.btn("HOW TO PLAY", UI.BLUE, 84, 30)
 	how.pressed.connect(show_howto)
 	root.add_child(how)
+	var tut := UI.btn("REPLAY TUTORIAL", Color("14b8a6"), 84, 30)
+	tut.pressed.connect(func() -> void: go("tutorial"))
+	root.add_child(tut)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL

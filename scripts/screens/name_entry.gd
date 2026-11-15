@@ -61,7 +61,7 @@ func _submit() -> void:
 		Game.set_account(str(r["id"]), str(r["secret"]))
 		await Game.refresh_profile()
 		if is_inside_tree():
-			go("home", {"welcome": true})
+			go("home" if Game.tutorial_done else "tutorial")
 		return
 	_btn.disabled = false
 	_btn.text = "START PLAYING"

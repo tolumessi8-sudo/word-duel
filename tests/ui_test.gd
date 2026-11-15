@@ -72,7 +72,31 @@ func _run() -> void:
 	check(await wait_until(func(): return screen_is("name_entry")), "first launch shows name entry")
 	main.current._edit.text = "tester1"
 	main.current._submit()
-	check(await wait_until(func(): return screen_is("home")), "registered and reached home")
+	check(await wait_until(func(): return screen_is("tutorial")), "new player gets the tutorial")
+	await create_timer(0.4).timeout
+	var tdlg = find_dialog(main.current)
+	check(tdlg != null, "tutorial intro dialog")
+	if tdlg:
+		tdlg.chosen.emit(0)
+	await create_timer(0.3).timeout
+	var tu = main.current
+	for i in 6:
+		if tu._board.is_solved():
+			break
+		var used: Array = tu._board.words.duplicate()
+		used.append(tu._board.start_word)
+		var hh: Dictionary = game.local_hint(tu._board.current(), "dig", used)
+		tu._board._select(int(hh["pos"]))
+		await create_timer(0.2).timeout
+		tu._board.input_letter(str(hh["letter"]))
+		await create_timer(0.3).timeout
+	check(tu._board.is_solved() and tu._done, "tutorial solved COT > DIG")
+	await create_timer(1.8).timeout
+	var tdlg2 = find_dialog(main.current)
+	if tdlg2:
+		tdlg2.chosen.emit(0)
+	check(await wait_until(func(): return screen_is("home")), "tutorial -> home")
+	check(game.tutorial_done, "tutorial remembered")
 	check(game.has_account() and str(game.profile.get("name", "")) == "tester1", "profile loaded")
 	await create_timer(0.5).timeout
 	check(game.coins() == 100, "coins shown = 100")

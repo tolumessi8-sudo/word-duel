@@ -4,6 +4,7 @@ extends Node
 signal profile_changed
 signal auth_lost
 
+var tutorial_done := false
 const SAVE_PATH := "user://word_duel.cfg"
 
 var player_id := ""
@@ -31,6 +32,7 @@ func load_settings() -> void:
 	player_id = str(cfg.get_value("auth", "id", ""))
 	secret = str(cfg.get_value("auth", "secret", ""))
 	sound_on = bool(cfg.get_value("settings", "sound", true))
+	tutorial_done = bool(cfg.get_value("settings", "tutorial", false))
 
 
 func save_settings() -> void:
@@ -38,6 +40,7 @@ func save_settings() -> void:
 	cfg.set_value("auth", "id", player_id)
 	cfg.set_value("auth", "secret", secret)
 	cfg.set_value("settings", "sound", sound_on)
+	cfg.set_value("settings", "tutorial", tutorial_done)
 	cfg.save(SAVE_PATH)
 
 
