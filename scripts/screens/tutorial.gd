@@ -143,5 +143,6 @@ func _win() -> void:
 
 func _finish(_completed: bool) -> void:
 	Game.tutorial_done = true
+	Ads.setup_done()
 	Game.save_settings()
 	go("home")

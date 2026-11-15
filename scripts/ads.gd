@@ -9,6 +9,7 @@ extends Node
 signal banner_changed
 
 var banner_enabled := true
+var _setup_done := false
 var native: RefCounted  # real AdMob module, only present in the "real ads" build on Android
 var _layer: CanvasLayer
 signal _ad_closed(completed: bool)
@@ -23,8 +24,19 @@ func _ready() -> void:
 		native = load("res://scripts/ads_admob.gd").new(get_tree())
 		native.start()
 		await get_tree().process_frame
+		if Game.tutorial_done:
+			setup_done()
+
+
+## No banner while the player is still picking a name / doing the tutorial.
+## Called when that is finished (and at startup for returning players).
+func setup_done() -> void:
+	if _setup_done:
+		return
+	_setup_done = true
+	if native != null:
 		native.show_banner(banner_enabled)
-		banner_changed.emit()
+	banner_changed.emit()
 
 
 ## True when real AdMob ads are active (so no simulated ads or placeholder strip).
@@ -34,7 +46,7 @@ func is_real() -> bool:
 
 ## Viewport units covered by the real banner at the bottom of the screen (0 if none).
 func native_banner_height() -> int:
-	if native == null or not banner_enabled:
+	if native == null or not banner_enabled or not _setup_done:
 		return 0
 	var win := DisplayServer.window_get_size()
 	if win.x <= 0:
@@ -52,7 +64,7 @@ func banner_height() -> int:
 
 func set_banner(on: bool) -> void:
 	banner_enabled = on
-	if native != null:
+	if native != null and _setup_done:
 		native.show_banner(on)
 	banner_changed.emit()
 
