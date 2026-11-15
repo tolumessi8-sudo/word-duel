@@ -18,7 +18,7 @@ func _ready() -> void:
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
 	add_child(_layer)
-	if OS.get_name() == "Android" and ResourceLoader.exists("res://addons/admob/plugin.cfg") \
+	if OS.get_name() == "Android" and ResourceLoader.exists("res://addons/admob/admob.gd") \
 			and ResourceLoader.exists("res://scripts/ads_admob.gd"):
 		native = load("res://scripts/ads_admob.gd").new(get_tree())
 		native.start()
